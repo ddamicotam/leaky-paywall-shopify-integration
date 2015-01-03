@@ -167,7 +167,7 @@ function shopify_paywall_page() {
 function shopify_paywall_page_update()	{
 	// this is where validation would go
 	update_option('shopify_url', 						$_POST['shopify_url']);
-	update_option('shopify_subscription_period', 		$_POST['shopify_subscription_period']);
+	update_option('shopify_subscription_period', 				$_POST['shopify_subscription_period']);
 	update_option('shopify_secret', 					$_POST['shopify_secret']);
 	update_option('shopify_api_key', 					$_POST['shopify_api_key']);
 	update_option('shopify_password', 					$_POST['shopify_password']);
