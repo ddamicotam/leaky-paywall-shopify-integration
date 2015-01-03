@@ -1,8 +1,9 @@
 <?php
 
+
 /*
-  Plugin Name: Shopify Paywall
-  Plugin URI: http://maciejbis.net/
+  Plugin Name: Shopify->Leaky Paywall Integration Wordpress Plugin
+  Plugin URI: https://github.com/maciejbis/Shopify-Leaky-Paywall-Integration-Wordpress-Plugin
   Description: A simple plugin that allows to grab subscriber's data to Paywall system.
   Author: Maciej Bis
   Version: 1.0.0
@@ -12,12 +13,12 @@
 add_action( 'shopify_hook', 'shopify' ); 
 function shopify($import_all = false) {
 	global $wpdb;
-	if (!isset($wpdb->issuem_leaky_paywall_subscribers)) {
+	if (!isset($wpdb->issuem_leaky_paywall_subscribers) && ($wpdb->get_var("SHOW TABLES LIKE '" . $wpdb->prefix . "issuem_leaky_paywall_subscribers'") === $wpdb->prefix . 'issuem_leaky_paywall_subscribers')) {
 		$wpdb->issuem_leaky_paywall_subscribers = $wpdb->prefix . 'issuem_leaky_paywall_subscribers';
 	}
-	// show the orders paid in last 6 hours (UTC -4:00)
-	$timezone = 4*60*60 + 6*60*60;
-	$limitdate = gmdate("Y-m-d\TH:i", time()-($timezone));
+	// show the orders paid in last 6 hours (GMT time)
+	$timebefore = 6*60*60;
+	$limitdate = gmdate("Y-m-d\TH:i", time() - ($timebefore));
 	$imported = '';
 	$rows = '';
 	$comma = '';
@@ -37,12 +38,18 @@ function shopify($import_all = false) {
 		} else {
 			$json = file_get_contents("https://$key:$password@$shop/admin/orders.json?limit=250&financial_status=paid");
 		}
+		
+		// stop if the JSON string is empty.
+		if(empty($json)) die();
+		
 		$json = json_decode($json, true);
 		$orders = $json['orders'];
 		$count = count($orders);
 		
-		//get all subscribers' email
-		$query = 'SELECT email FROM ' . $wpdb->prefix . 'issuem_leaky_paywall_subscribers';
+		//get all subscribers' email if table with subscribers exist
+		if(!(isset($wpdb->issuem_leaky_paywall_subscribers))) die();
+		
+		$query = 'SELECT email FROM ' . $wpdb->issuem_leaky_paywall_subscribers;
 		$subscribers_array = $wpdb->get_results($query, ARRAY_N);
 		foreach ($subscribers_array as $subscriber) {
 			$subscribers[] = $subscriber[0];
@@ -51,7 +58,9 @@ function shopify($import_all = false) {
 			foreach($orders as $order) {
 				// the account will expire after one year
 				$created = date('Y-m-d H:i:s', strtotime($order['created_at']));
-				$expires = date('Y-m-d H:i:s', strtotime(date("Y-m-d H:i:s", strtotime($created)) . " + 365 day"));
+				
+				$shopify_subscription_period = shopify_subscription_period();
+				$expires = date('Y-m-d H:i:s', strtotime(date("Y-m-d H:i:s", strtotime($created)) . " + $shopify_subscription_period day"));
 				$email = $order['email'];
 				$hash = md5($created);
 				$price = $order['total_price'];
@@ -95,8 +104,14 @@ function shopify($import_all = false) {
 
 add_shortcode('shopify', 'shopify');
 
+function shopify_subscription_period() {
+	$shopify_subscription_period = (is_numeric(get_option('shopify_subscription_period'))) ? get_option('shopify_subscription_period') : '365';
+	
+	return $shopify_subscription_period;
+}
+
 function shopify_paywall_admin_menu() {
-		add_menu_page("Shopify/Paywall", "Shopify/Paywall", 'edit_themes', basename(__FILE__), 'shopify_paywall_page');
+	add_submenu_page( 'tools.php', 'Shopify/Paywall', 'Shopify/Paywall', 'edit_themes', basename(__FILE__), 'shopify_paywall_page');
 }
 
 add_action('admin_menu', 'shopify_paywall_admin_menu');
@@ -114,19 +129,22 @@ function shopify_paywall_page() {
 			<h3>Import recent subscribers from Shopify (max. 250 last orders)</h3>
 			<input type="checkbox" name="shopify_import" id="shopify_import" value="1" />
 			
-			<h3>URL of the shop</h3>
+			<h3>Subscription period in days <em>(eg. "365" for one year)</em></h3>
+			<input name="shopify_subscription_period" id="shopify_subscription_period" style="width: 100px;" value="<?php echo shopify_subscription_period(); ?>" />
+			
+			<h3>URL of the shop <em>(eg. yourstore.myshopify.com, required)</em></h3>
 			<input name="shopify_url" id="shopify_url" style="width: 400px;" value="<?php echo get_option('shopify_url'); ?>" />
 			
-			<h3>Shopify API key</h3>
+			<h3>Shopify API key <em>(required)</em></h3>
 			<input name="shopify_api_key" id="shopify_api_key" style="width: 400px;" value="<?php echo get_option('shopify_api_key'); ?>" />
 			
-			<h3>Shopify Secret key</h3>
+			<h3>Shopify Secret key <em>(required)</em></h3>
 			<input name="shopify_secret" id="shopify_secret" style="width: 400px;" value="<?php echo get_option('shopify_secret'); ?>" />
 
-			<h3>Shopify Password</h3>
+			<h3>Shopify Password <em>(required)</em></h3>
 			<input name="shopify_password" id="shopify_password" style="width: 400px;" value="<?php echo get_option('shopify_password'); ?>" />
 			
-			<h3>Product IDs</h3>
+			<h3>Product IDs (comma separated, required)</em></h3>
 			<input name="shopify_products" id="shopify_products" style="width: 400px;" value="<?php echo get_option('shopify_products'); ?>" />
 			
 			<p style="clear: both; padding-top: 20px;">
@@ -149,6 +167,7 @@ function shopify_paywall_page() {
 function shopify_paywall_page_update()	{
 	// this is where validation would go
 	update_option('shopify_url', 						$_POST['shopify_url']);
+	update_option('shopify_subscription_period', 		$_POST['shopify_subscription_period']);
 	update_option('shopify_secret', 					$_POST['shopify_secret']);
 	update_option('shopify_api_key', 					$_POST['shopify_api_key']);
 	update_option('shopify_password', 					$_POST['shopify_password']);
@@ -159,7 +178,7 @@ function shopify_paywall_page_update()	{
 add_filter( 'cron_schedules', 'shopify_paywall_add_schedule' ); 
 function shopify_paywall_add_schedule( $schedules ) {
 	$schedules['minute'] = array(
-		'interval' => 90, // 60 seconds
+		'interval' => 60, // 60 seconds
 		'display' => 'Every minute'
 	);
 	return $schedules;
