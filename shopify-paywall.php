@@ -26,8 +26,12 @@ function shopify($import_all = false) {
 	if($key != '' && $secret != '' && $shop != '') {
 
 		// get orders in the last 2 minutes
-		$date_min = date('o-m-d\TH:i:s', time() - 2 * 60);
-		$json = file_get_contents("https://$key:$password@$shop/admin/orders.json?limit=250&financial_status=paid&created_at_min=$date_min");
+		$limitdate = date('o-m-d\TH:i:s', time() - 2 * 60);
+		if($import_all == false) {
+			$json = file_get_contents("https://$key:$password@$shop/admin/orders.json?limit=100&financial_status=paid&updated_at_min=$limitdate");
+		} else {
+			$json = file_get_contents("https://$key:$password@$shop/admin/orders.json?limit=250&financial_status=paid");
+		}
 
 		// stop if the JSON string is empty.
 		if(empty($json)) die();
