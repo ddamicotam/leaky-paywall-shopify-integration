@@ -1,12 +1,11 @@
 <?php
 
 /*
-  Plugin Name: Shopify->Leaky Paywall Integration Wordpress Plugin
-  Plugin URI: https://github.com/donbui/Shopify-Leaky-Paywall-Integration-Wordpress-Plugin
+  Plugin Name: Leaky Paywall - Shopify Integration
+  Plugin URI: https://github.com/donbui/leaky-paywall-shopify-integration/tree/update
   Description: Sell Leaky Paywall WordPress subscriptions on Shopify
   Author: Maciej Bis, updated by Don Bui
   Version: 1.0.0
-  Author URI: http://maciejbis.net
  */
 
 add_action( 'shopify_hook', 'shopify' );
