@@ -13,7 +13,6 @@ function shopify($import_all = false) {
 
 	$shop = get_option('shopify_url');
 	$key = get_option('shopify_api_key');
-	$secret = get_option('shopify_secret');
 	$password = get_option('shopify_password');
 	$product_ids = get_option('shopify_products');
 	$product_ids = explode(',', str_replace(' ', '', $product_ids));
@@ -22,7 +21,7 @@ function shopify($import_all = false) {
 	$level_id = get_option('shopify_level_id');
 	$level_id = explode(',', str_replace(' ', '', $level_id));
 
-	if($key != '' && $secret != '' && $shop != '') {
+	if($key != '' && $shop != '') {
 
 		$limitdate = date('o-m-d\TH:i:s', time() - 2 * 60); // get orders in the last 2 minutes
 		if($import_all == false) {
@@ -52,11 +51,11 @@ function shopify($import_all = false) {
 						$meta = array(
 							'level_id' 			=> $level_id[$index],
 							// 'subscriber_id'		=> $subscriber_id,
-							// 'price' 			=> trim( $_POST['leaky-paywall-subscriber-price'] ),
+							'price' 			=> $product['price'],
 							// 'description' 		=> __( 'Manual Addition', 'issuem-leaky-paywall' ),
 							'expires' 			=> $expires,
 							'payment_gateway' 	=> 'Shopify',
-							'payment_status' 	=> 'active',
+							'payment_status' 	=> 'Active',
 							'interval' 			=> 0,
 							'plan'				=> '',
 						);
@@ -87,16 +86,13 @@ function shopify_paywall_page() {
 
 			<input type="hidden" name="update_themeoptions" value="true" />
 
-			<p>Shopify API key <em>(required)</em></p>
+			<p>Shopify API Key <em>(required)</em></p>
 			<input name="shopify_api_key" id="shopify_api_key" style="width: 400px;" value="<?php echo get_option('shopify_api_key'); ?>" />
 
 			<p>Shopify Password <em>(required)</em></p>
 			<input name="shopify_password" id="shopify_password" style="width: 400px;" value="<?php echo get_option('shopify_password'); ?>" />
 
-			<p>Shopify Secret key <em>(required)</em></p>
-			<input name="shopify_secret" id="shopify_secret" style="width: 400px;" value="<?php echo get_option('shopify_secret'); ?>" />
-
-			<p>URL of the shop <em>(eg. yourstore.myshopify.com, required)</em></p>
+			<p>Shopify Store URL <em>(eg. yourstore.myshopify.com, required)</em></p>
 			<input name="shopify_url" id="shopify_url" style="width: 400px;" value="<?php echo get_option('shopify_url'); ?>" />
 
 			<p>Variant IDs <em>(comma separated, required)</em></p>
@@ -132,7 +128,6 @@ function shopify_paywall_page_update()	{
 	// this is where validation would go
 	update_option('shopify_url', 						$_POST['shopify_url']);
 	update_option('shopify_subscription_period', 		$_POST['shopify_subscription_period']);
-	update_option('shopify_secret', 					$_POST['shopify_secret']);
 	update_option('shopify_api_key', 					$_POST['shopify_api_key']);
 	update_option('shopify_password', 					$_POST['shopify_password']);
 	update_option('shopify_products', 					$_POST['shopify_products']);
