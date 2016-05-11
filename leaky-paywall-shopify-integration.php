@@ -74,7 +74,7 @@ function shopify($import_all = false) {
 add_shortcode('shopify', 'shopify');
 
 function shopify_paywall_admin_menu() {
-	add_submenu_page( 'tools.php', 'Shopify/Paywall', 'Shopify/Paywall', 'edit_themes', basename(__FILE__), 'shopify_paywall_page');
+	add_submenu_page( 'tools.php', 'Leaky Paywall - Shopify Integration', 'Leaky Paywall - Shopify Integration', 'edit_themes', basename(__FILE__), 'shopify_paywall_page');
 }
 add_action('admin_menu', 'shopify_paywall_admin_menu');
 
@@ -88,29 +88,29 @@ function shopify_paywall_page() {
 
 			<input type="hidden" name="update_themeoptions" value="true" />
 
-			<h3>Import recent subscribers from Shopify (max. 250 last orders)</h3>
-			<input type="checkbox" name="shopify_import" id="shopify_import" value="1" />
-
-			<h3>Shopify API key <em>(required)</em></h3>
+			<p>Shopify API key <em>(required)</em></p>
 			<input name="shopify_api_key" id="shopify_api_key" style="width: 400px;" value="<?php echo get_option('shopify_api_key'); ?>" />
 
-			<h3>Shopify Password <em>(required)</em></h3>
+			<p>Shopify Password <em>(required)</em></p>
 			<input name="shopify_password" id="shopify_password" style="width: 400px;" value="<?php echo get_option('shopify_password'); ?>" />
 
-			<h3>Shopify Secret key <em>(required)</em></h3>
+			<p>Shopify Secret key <em>(required)</em></p>
 			<input name="shopify_secret" id="shopify_secret" style="width: 400px;" value="<?php echo get_option('shopify_secret'); ?>" />
 
-			<h3>URL of the shop <em>(eg. yourstore.myshopify.com, required)</em></h3>
+			<p>URL of the shop <em>(eg. yourstore.myshopify.com, required)</em></p>
 			<input name="shopify_url" id="shopify_url" style="width: 400px;" value="<?php echo get_option('shopify_url'); ?>" />
 
-			<h3>Variant IDs <em>(comma separated, required)</em></h3>
+			<p>Variant IDs <em>(comma separated, required)</em></p>
 			<input name="shopify_products" id="shopify_products" style="width: 400px;" value="<?php echo get_option('shopify_products'); ?>" />
 
-			<h3>Subscription period in days <em>(comma separated, in same sequence as Variant ID)</em></h3>
+			<p>Subscription period in days <em>(comma separated, in same sequence as Variant ID)</em></p>
 			<input name="shopify_subscription_period" id="shopify_subscription_period" style="width: 400px;" value="<?php echo get_option('shopify_subscription_period'); ?>" />
 
-			<h3>Level ID <em>(comma separated, in same sequence as Variant ID)</em></h3>
+			<p>Level ID <em>(comma separated, in same sequence as Variant ID)</em></p>
 			<input name="shopify_level_id" id="shopify_level_id" style="width: 400px;" value="<?php echo get_option('shopify_level_id'); ?>" />
+
+			<p>Import last 250 orders (If unchecked, import orders from last 2 minutes)</p>
+			<input type="checkbox" name="shopify_import" id="shopify_import" value="1" />
 
 			<p style="clear: both; padding-top: 20px;">
 			<input type="submit" name="search" value="Update Options" class="button" />
