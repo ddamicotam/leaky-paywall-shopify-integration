@@ -4,7 +4,7 @@
   Plugin Name: Shopify->Leaky Paywall Integration Wordpress Plugin
   Plugin URI: https://github.com/donbui/Shopify-Leaky-Paywall-Integration-Wordpress-Plugin
   Description: Sell Leaky Paywall WordPress subscriptions on Shopify
-  Author: Don Bui, Original by Maciej Bis
+  Author: Maciej Bis, updated by Don Bui
   Version: 1.0.0
   Author URI: http://maciejbis.net
  */
@@ -25,8 +25,7 @@ function shopify($import_all = false) {
 
 	if($key != '' && $secret != '' && $shop != '') {
 
-		// get orders in the last 2 minutes
-		$limitdate = date('o-m-d\TH:i:s', time() - 2 * 60);
+		$limitdate = date('o-m-d\TH:i:s', time() - 2 * 60); // get orders in the last 2 minutes
 		if($import_all == false) {
 			$json = file_get_contents("https://$key:$password@$shop/admin/orders.json?limit=100&financial_status=paid&updated_at_min=$limitdate");
 		} else {
@@ -44,14 +43,13 @@ function shopify($import_all = false) {
 			foreach($orders as $order) {
 				$created = date('Y-m-d H:i:s', strtotime($order['created_at']));
 				$email = $order['email'];
-				$hash = md5($created);
 				$price = $order['total_price'];
 				$products = $order['line_items'];
 
 				foreach($products as $product) {
 					if (in_array($product['variant_id'], $product_ids)) {
-						$index = array_search($product['variant_id'], $product_ids);
-						$expires = date('Y-m-d H:i:s', strtotime(date('Y-m-d H:i:s', strtotime($created)) . " + " . $subscription_period[$index] . " day"));
+						$index = array_search($product['variant_id'], $product_ids); // get index of received variant-ID in user-defined list of IDs
+						$expires = date('Y-m-d H:i:s', strtotime(date('Y-m-d H:i:s', strtotime($created)) . " + " . $subscription_period[$index] . " day")); // add subscription period to order date
 						$meta = array(
 							'level_id' 			=> $level_id[$index],
 							// 'subscriber_id'		=> $subscriber_id,
@@ -63,7 +61,6 @@ function shopify($import_all = false) {
 							'interval' 			=> 0,
 							'plan'				=> '',
 						);
-
 						// $user_id = leaky_paywall_new_subscriber( NULL, $email, $subscriber_id, $meta, $login );
 						$user_id = leaky_paywall_new_subscriber( NULL, $email, NULL, $meta, NULL );
 						do_action( 'add_leaky_paywall_subscriber', $user_id );
