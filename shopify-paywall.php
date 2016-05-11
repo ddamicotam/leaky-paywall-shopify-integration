@@ -71,13 +71,11 @@ function shopify($import_all = false) {
 			}
 		}
 }
-
 add_shortcode('shopify', 'shopify');
 
 function shopify_paywall_admin_menu() {
 	add_submenu_page( 'tools.php', 'Shopify/Paywall', 'Shopify/Paywall', 'edit_themes', basename(__FILE__), 'shopify_paywall_page');
 }
-
 add_action('admin_menu', 'shopify_paywall_admin_menu');
 
 function shopify_paywall_page() {
