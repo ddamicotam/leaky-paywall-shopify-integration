@@ -9,6 +9,7 @@
  */
 
 add_action( 'shopify_hook', 'shopify' );
+
 function shopify($import_all = false) {
 	$shop = get_option('shopify_url');
 	$key = get_option('shopify_api_key');
