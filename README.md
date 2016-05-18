@@ -1,6 +1,9 @@
-Shopify->Leaky Paywall Integration Wordpress Plugin
+Leaky Paywall - Shopify Integration
 ==================================================
 
-A really basic plugin that allows to import the emails of recent customers (last 6 hours) who bought and paid for particular product (see "Product ID" in Shopify admin panel) in your Shopify Store and by default gives them one-year subscription.
+Wordpress plugin to be used with [Leaky Paywall](https://zeen101.com/leakypaywall/) and Shopify.
+Checks if anybody has recently purchased products corresponding to a Shopify [Variant ID](https://help.shopify.com/themes/customization/products/find-variant-id) and enters their email address into LeakyPaywall/WordPress database.
 
-Every minute, the plugin checks for new clients' orders in Shopify store.
+![Admin Panel UI](screenshot-1.png)
+
+Original by [maciejbis](https://github.com/maciejbis), updated to use Leaky Paywall's helper functions instead of writing SQL queries, expanded to support [multiple tiers and expiration dates](https://zeen101.com/downloads/leaky-paywall-multiple-levels/).
