@@ -9,8 +9,10 @@
  */
 
 add_action( 'shopify_hook', 'shopify' );
-
 function shopify($import_all = false) {
+
+	// error_log('LPW: shopify integration ran!');
+
 	$shop = get_option('shopify_url');
 	$key = get_option('shopify_api_key');
 	$password = get_option('shopify_password');
@@ -24,11 +26,13 @@ function shopify($import_all = false) {
 	if($key != '' && $shop != '') {
 
 		$limitdate = date('o-m-d\TH:i:s', time() - 2 * 60); // get orders in the last 2 minutes
-		if($import_all == false) {
-			$json = file_get_contents("https://$key:$password@$shop/admin/orders.json?limit=100&financial_status=paid&updated_at_min=$limitdate");
-		} else {
-			$json = file_get_contents("https://$key:$password@$shop/admin/orders.json?limit=250&financial_status=paid");
+		$shopify_url = "https://$key:$password@$shop/admin/orders.json?limit=100&financial_status=paid&updated_at_min=$limitdate";
+		if($import_all === true) {
+			// unless we are grabbing everything, in which case get the last 250 orders
+			$shopify_url = "https://$key:$password@$shop/admin/orders.json?limit=250&financial_status=paid";
 		}
+		$json = file_get_contents($shopify_url);
+		// error_log('LPW: '.$json);
 
 		// stop if the JSON string is empty.
 		if(empty($json)) die();
@@ -43,31 +47,36 @@ function shopify($import_all = false) {
 				$email = $order['email'];
 				$price = $order['total_price'];
 				$products = $order['line_items'];
+				$customer_id = $order['customer']['id'];
 
 				foreach($products as $product) {
 					if (in_array($product['variant_id'], $product_ids)) {
 						$index = array_search($product['variant_id'], $product_ids); // get index of received variant-ID in user-defined list of IDs
 						$expires = date('Y-m-d H:i:s', strtotime(date('Y-m-d H:i:s', strtotime($created)) . " + " . $subscription_period[$index] . " day")); // add subscription period to order date
+						
 						$meta = array(
 							'level_id' 			=> $level_id[$index],
-							// 'subscriber_id'		=> $subscriber_id,
+							'subscriber_id'		=> strval($customer_id),
 							'price' 			=> $product['price'],
 							// 'description' 		=> __( 'Manual Addition', 'issuem-leaky-paywall' ),
 							'expires' 			=> $expires,
-							'payment_gateway' 	=> 'Shopify',
-							'payment_status' 	=> 'Active',
-							'interval' 			=> 0,
-							'plan'				=> '',
+							'payment_gateway' 	=> 'manual',// @TODO add an actual shopify gateway, rn we just use manual to go with the flow in lp
+							'payment_status' 	=> 'active',
+							'interval' 			=> 365,
+							'plan'				=> ''
 						);
-						// $user_id = leaky_paywall_new_subscriber( NULL, $email, $subscriber_id, $meta, $login );
-						$user_id = leaky_paywall_new_subscriber( NULL, $email, NULL, $meta, NULL );
+						
+						// error_log('LPW: here\'s the meta info I\'m going to pass to new subscriber maker');
+						// error_log('LPW: '.implode(' | ', $meta));
+						
+						$user_id = leaky_paywall_new_subscriber( NULL, $email, $customer_id, $meta, NULL );
 						do_action( 'add_leaky_paywall_subscriber', $user_id );
 						echo $email;
 					}
 				}
 			}
-			}
 		}
+	}
 }
 add_shortcode('shopify', 'shopify');
 
@@ -138,7 +147,7 @@ function shopify_paywall_page_update()	{
 add_filter( 'cron_schedules', 'shopify_paywall_add_schedule' );
 function shopify_paywall_add_schedule( $schedules ) {
 	$schedules['minute'] = array(
-		'interval' => 60, // 60 seconds
+		'interval' => 120,
 		'display' => 'Every minute'
 	);
 	return $schedules;
@@ -154,5 +163,8 @@ function register_sync_event() {
 		wp_schedule_event( time(), 'minute', 'shopify_hook' );
 	}
 }
+
+// @TODO implement leaky_paywall_subscriber_payment_gateways to support shopify as an actual payment gateway
+// @TODO implement leaky_paywall_has_user_paid to add validation for shopify gateway
 
 ?>
